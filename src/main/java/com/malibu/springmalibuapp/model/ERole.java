@@ -1,7 +1,7 @@
 package com.malibu.springmalibuapp.model;
 
 public enum ERole {
-  USER,
-  MODERATOR,
-  ADMIN
+  ROLE_USER,
+  ROLE_MODERATOR,
+  ROLE_ADMIN
 }
