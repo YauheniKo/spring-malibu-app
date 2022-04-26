@@ -1,7 +1,7 @@
 package com.malibu.springmalibuapp.security.services;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.malibu.springmalibuapp.models.User;
+import com.malibu.springmalibuapp.model.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;

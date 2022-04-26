@@ -1,7 +1,7 @@
 package com.malibu.springmalibuapp.repository;
 
 
-import com.malibu.springmalibuapp.models.User;
+import com.malibu.springmalibuapp.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

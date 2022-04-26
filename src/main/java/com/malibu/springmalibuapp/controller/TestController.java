@@ -1,4 +1,4 @@
-package com.malibu.springmalibuapp.controllers;
+package com.malibu.springmalibuapp.controller;
 
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;

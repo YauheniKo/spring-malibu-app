@@ -3,7 +3,7 @@ package com.malibu.springmalibuapp.security;
 import com.malibu.springmalibuapp.security.jwt.AuthEntryPointJwt;
 import com.malibu.springmalibuapp.security.jwt.AuthTokenFilter;
 import com.malibu.springmalibuapp.security.services.UserDetailsServiceImpl;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -23,12 +23,11 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
         // securedEnabled = true,
         // jsr250Enabled = true,
         prePostEnabled = true)
+@AllArgsConstructor
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
-    @Autowired
-    UserDetailsServiceImpl userDetailsService;
+    private final UserDetailsServiceImpl userDetailsService;
 
-    @Autowired
-    private AuthEntryPointJwt unauthorizedHandler;
+    private final AuthEntryPointJwt unauthorizedHandler;
 
     @Bean
     public AuthTokenFilter authenticationJwtTokenFilter() {

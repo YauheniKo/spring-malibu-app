@@ -1,4 +1,4 @@
-package com.malibu.springmalibuapp.models;
+package com.malibu.springmalibuapp.model;
 
 public enum ERole {
   USER,
