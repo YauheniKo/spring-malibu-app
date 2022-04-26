@@ -3,15 +3,14 @@ package com.malibu.springmalibuapp.service.auth;
 import com.malibu.springmalibuapp.model.ERole;
 import com.malibu.springmalibuapp.model.Role;
 import com.malibu.springmalibuapp.model.User;
-import com.malibu.springmalibuapp.payload.request.LoginRequest;
-import com.malibu.springmalibuapp.payload.request.SignupRequest;
-import com.malibu.springmalibuapp.payload.response.JwtResponse;
-import com.malibu.springmalibuapp.payload.response.MessageResponse;
+import com.malibu.springmalibuapp.dto.request.LoginRequestDto;
+import com.malibu.springmalibuapp.dto.request.SignupRequestDto;
+import com.malibu.springmalibuapp.dto.response.JwtResponseDto;
+import com.malibu.springmalibuapp.dto.response.MessageResponseDto;
 import com.malibu.springmalibuapp.repository.RoleRepository;
 import com.malibu.springmalibuapp.repository.UserRepository;
 import com.malibu.springmalibuapp.security.jwt.JwtUtils;
 import com.malibu.springmalibuapp.security.services.UserDetailsImpl;
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -36,10 +35,10 @@ public class AuthService {
     private final PasswordEncoder encoder;
     private final JwtUtils jwtUtils;
 
-    public JwtResponse authenticateUser(LoginRequest loginRequest) {
+    public JwtResponseDto authenticateUser(LoginRequestDto loginRequestDto) {
 
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+                new UsernamePasswordAuthenticationToken(loginRequestDto.getUsername(), loginRequestDto.getPassword()));
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String jwt = jwtUtils.generateJwtToken(authentication);
@@ -48,58 +47,58 @@ public class AuthService {
         List<String> roles = userDetails.getAuthorities().stream()
                 .map(item -> item.getAuthority())
                 .collect(Collectors.toList());
-        return new JwtResponse(jwt,
+        return new JwtResponseDto(jwt,
                 userDetails.getId(),
                 userDetails.getUsername(),
                 userDetails.getEmail(),
                 roles);
     }
 
-    public ResponseEntity<?> registerUser(SignupRequest signUpRequest) {
-        if (userRepository.existsByUsername(signUpRequest.getUsername())) {
+    public ResponseEntity<?> registerUser(SignupRequestDto signUpRequestDto) {
+        if (userRepository.existsByUsername(signUpRequestDto.getUsername())) {
             return ResponseEntity
                     .badRequest()
-                    .body(new MessageResponse()
+                    .body(new MessageResponseDto()
                             .setMessage("Error: Username is already taken!"));
         }
 
-        if (userRepository.existsByEmail(signUpRequest.getEmail())) {
+        if (userRepository.existsByEmail(signUpRequestDto.getEmail())) {
             return ResponseEntity
                     .badRequest()
-                    .body(new MessageResponse()
+                    .body(new MessageResponseDto()
                             .setMessage("Error: Email is already in use!"));
         }
 
         // Create new user's account
         User user = new User()
-                .setUsername(signUpRequest.getUsername())
-                .setEmail(signUpRequest.getEmail())
-                .setPassword(encoder.encode(signUpRequest.getPassword()));
+                .setUsername(signUpRequestDto.getUsername())
+                .setEmail(signUpRequestDto.getEmail())
+                .setPassword(encoder.encode(signUpRequestDto.getPassword()));
 
-        Set<String> strRoles = signUpRequest.getRole();
+        Set<String> strRoles = signUpRequestDto.getRole();
         Set<Role> roles = new HashSet<>();
 
         if (strRoles == null) {
-            Role userRole = roleRepository.findByName(ERole.USER)
+            Role userRole = roleRepository.findByName(ERole.ROLE_USER)
                     .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
             roles.add(userRole);
         } else {
             strRoles.forEach(role -> {
                 switch (role) {
                     case "admin":
-                        Role adminRole = roleRepository.findByName(ERole.ADMIN)
+                        Role adminRole = roleRepository.findByName(ERole.ROLE_ADMIN)
                                 .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
                         roles.add(adminRole);
 
                         break;
                     case "mod":
-                        Role modRole = roleRepository.findByName(ERole.MODERATOR)
+                        Role modRole = roleRepository.findByName(ERole.ROLE_MODERATOR)
                                 .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
                         roles.add(modRole);
 
                         break;
                     default:
-                        Role userRole = roleRepository.findByName(ERole.USER)
+                        Role userRole = roleRepository.findByName(ERole.ROLE_USER)
                                 .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
                         roles.add(userRole);
                 }
@@ -109,7 +108,7 @@ public class AuthService {
         user.setRoles(roles);
         userRepository.save(user);
 
-        return ResponseEntity.ok(new MessageResponse()
+        return ResponseEntity.ok(new MessageResponseDto()
                 .setMessage("User registered successfully!"));
 
     }
