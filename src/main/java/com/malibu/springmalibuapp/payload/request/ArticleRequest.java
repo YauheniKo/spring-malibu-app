@@ -4,7 +4,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
-import java.util.Set;
 
 @Getter
 @Setter
@@ -14,5 +13,5 @@ public class ArticleRequest {
     private String title;
     private String description;
     private String text;
-    private Set<String> tagName;
+    private String tagName;
 }

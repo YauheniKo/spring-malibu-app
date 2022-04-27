@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -102,9 +103,9 @@ public class ArticleService {
         }
     }
 
-    private Set<Tag> getTags(Set<String> tagNames) {
+    private Set<Tag> getTags(String tagNamesStr) {
 
-
+        Set<String> tagNames = Arrays.stream(tagNamesStr.split(",")).collect(Collectors.toSet());
 
         List<Tag> currentTag =
                 tagNames
