@@ -1,11 +1,14 @@
 package com.malibu.springmalibuapp.controller;
 
 import com.malibu.springmalibuapp.model.Article;
+import com.malibu.springmalibuapp.model.User;
 import com.malibu.springmalibuapp.payload.request.ArticleRequest;
+import com.malibu.springmalibuapp.security.services.UserDetailsImpl;
 import com.malibu.springmalibuapp.service.article.ArticleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -37,7 +40,7 @@ public class ArticleController {
     }
 
     @PostMapping
-    public ResponseEntity<Article> createArticle(@RequestBody ArticleRequest articleRequest) {
+    public ResponseEntity<Article> createArticle( @RequestBody ArticleRequest articleRequest) {
         return articleService.createArticle(articleRequest);
     }
 

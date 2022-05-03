@@ -2,10 +2,13 @@ package com.malibu.springmalibuapp.service.article;
 
 import com.malibu.springmalibuapp.model.Article;
 import com.malibu.springmalibuapp.model.Tag;
+import com.malibu.springmalibuapp.model.User;
 import com.malibu.springmalibuapp.payload.request.ArticleRequest;
 import com.malibu.springmalibuapp.repository.ArticleRepository;
 import com.malibu.springmalibuapp.repository.TagRepository;
+import com.malibu.springmalibuapp.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -29,14 +32,15 @@ public class ArticleService {
 
     private final ArticleRepository articleRepository;
     private final TagRepository tagRepository;
+    private final UserRepository userRepository;
 
-    public ResponseEntity<List<Article>> getAllArticle(@RequestParam(required = false) String title) {
+    public ResponseEntity<List<Article>> getAllArticle(String title) {
         try {
-            List<Article> articles = new ArrayList<>();
-            if (title == null) {
-                articles.addAll(articleRepository.findAll());
+            List<Article> articles;
+            if (StringUtils.isEmpty(title)) {
+                articles = articleRepository.findAll();
             } else {
-                articles.addAll(articleRepository.findByTitleContaining(title));
+                articles = articleRepository.findByTitle(title);
             }
 
             if (articles.isEmpty()) {
@@ -45,6 +49,7 @@ public class ArticleService {
 
             return new ResponseEntity<>(articles, HttpStatus.OK);
         } catch (Exception e) {
+            e.printStackTrace();
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -66,7 +71,8 @@ public class ArticleService {
                             .setDescription(articleRequest.getDescription())
                             .setText(articleRequest.getText())
                             .setTag(getTags(articleRequest.getTagName()))
-                            .setCreateAt(new Date()));
+                            .setCreateAt(new Date())
+                            .setUser(userRepository.findById(articleRequest.getUserId()).get()));
 
             return new ResponseEntity<>(newArticle, HttpStatus.CREATED);
         } catch (Exception e) {
