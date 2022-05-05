@@ -1,4 +1,4 @@
-package com.malibu.app.model;
+package com.malibu.app.entity;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -6,6 +6,7 @@ import lombok.Setter;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -31,9 +32,9 @@ public class Role implements Serializable {
 
   private String name;
 
-  // bi-directional many-to-many association to User
-  @ManyToMany(mappedBy = "roles")
-  private Set<User> users;
+//  // bi-directional many-to-many association to User
+//  @ManyToMany(fetch = FetchType.LAZY,mappedBy = "roles")
+//  private Set<User> users;
 
   public Role(String name) {
     this.name = name;

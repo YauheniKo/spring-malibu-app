@@ -1,6 +1,6 @@
 package com.malibu.app.repository;
 
-import com.malibu.app.model.Tag;
+import com.malibu.app.entity.Tag;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

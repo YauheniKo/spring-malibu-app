@@ -3,7 +3,7 @@ package com.malibu.app.service.user;
 import com.malibu.app.dto.LocalUser;
 import com.malibu.app.dto.SignUpRequest;
 import com.malibu.app.exception.UserAlreadyExistAuthenticationException;
-import com.malibu.app.model.User;
+import com.malibu.app.entity.User;
 import org.springframework.security.oauth2.core.oidc.OidcIdToken;
 import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
 

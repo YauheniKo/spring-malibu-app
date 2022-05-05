@@ -3,8 +3,8 @@ package com.malibu.app.util;
 import com.malibu.app.dto.LocalUser;
 import com.malibu.app.dto.SocialProvider;
 import com.malibu.app.dto.UserInfo;
-import com.malibu.app.model.Role;
-import com.malibu.app.model.User;
+import com.malibu.app.entity.Role;
+import com.malibu.app.entity.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 

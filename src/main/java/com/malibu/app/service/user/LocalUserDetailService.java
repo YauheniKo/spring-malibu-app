@@ -3,7 +3,7 @@ package com.malibu.app.service.user;
 
 import com.malibu.app.dto.LocalUser;
 import com.malibu.app.exception.ResourceNotFoundException;
-import com.malibu.app.model.User;
+import com.malibu.app.entity.User;
 import com.malibu.app.util.GeneralUtils;
 import lombok.AllArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetailsService;

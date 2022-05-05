@@ -1,6 +1,6 @@
 package com.malibu.app.repository;
 
-import com.malibu.app.model.Role;
+import com.malibu.app.entity.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

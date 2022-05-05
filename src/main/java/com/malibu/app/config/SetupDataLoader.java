@@ -1,9 +1,9 @@
 package com.malibu.app.config;
 
 import com.malibu.app.dto.SocialProvider;
-import com.malibu.app.model.ERole;
-import com.malibu.app.model.Role;
-import com.malibu.app.model.User;
+import com.malibu.app.entity.ERole;
+import com.malibu.app.entity.Role;
+import com.malibu.app.entity.User;
 import com.malibu.app.repository.RoleRepository;
 import com.malibu.app.repository.UserRepository;
 import lombok.RequiredArgsConstructor;

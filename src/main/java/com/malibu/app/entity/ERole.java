@@ -1,4 +1,4 @@
-package com.malibu.app.model;
+package com.malibu.app.entity;
 
 public enum ERole {
   ROLE_USER,

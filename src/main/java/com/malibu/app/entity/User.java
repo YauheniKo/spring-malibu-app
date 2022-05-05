@@ -1,4 +1,4 @@
-package com.malibu.app.model;
+package com.malibu.app.entity;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -7,6 +7,7 @@ import lombok.experimental.Accessors;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -40,9 +41,7 @@ public class User {
   private Long id;
 
   private String providerUserId;
-
   private boolean enabled;
-
 
   @Column(name = "created_date", nullable = false, updatable = false)
   @Temporal(TemporalType.TIMESTAMP)
@@ -52,9 +51,6 @@ public class User {
   protected Date modifiedDate;
 
   private String provider;
-
-
-
   @NotBlank
   @Size(max = 20)
   private String username;
@@ -68,7 +64,7 @@ public class User {
   @Size(max = 120)
   private String password;
 
-  @ManyToMany
+  @ManyToMany(fetch = FetchType.LAZY)
   @JoinTable( name = "user_roles",
         joinColumns = @JoinColumn(name = "user_id"),
         inverseJoinColumns = @JoinColumn(name = "role_id"))

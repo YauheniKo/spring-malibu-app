@@ -17,7 +17,7 @@ public class LocalUser extends User implements OAuth2User, OidcUser {
     private final OidcIdToken idToken;
     private final OidcUserInfo userInfo;
     private Map<String, Object> attributes;
-    private final com.malibu.app.model.User user;
+    private final com.malibu.app.entity.User user;
 
     public LocalUser(final String userID,
                      final String password,
@@ -26,7 +26,7 @@ public class LocalUser extends User implements OAuth2User, OidcUser {
                      final boolean credentialsNonExpired,
                      final boolean accountNonLocked,
                      final Collection<? extends GrantedAuthority> authorities,
-                     final com.malibu.app.model.User user) {
+                     final com.malibu.app.entity.User user) {
         this(userID, password, enabled, accountNonExpired, credentialsNonExpired, accountNonLocked, authorities, user, null, null);
     }
 
@@ -37,7 +37,7 @@ public class LocalUser extends User implements OAuth2User, OidcUser {
                      final boolean credentialsNonExpired,
                      final boolean accountNonLocked,
                      final Collection<? extends GrantedAuthority> authorities,
-                     final com.malibu.app.model.User user, OidcIdToken idToken,
+                     final com.malibu.app.entity.User user, OidcIdToken idToken,
                      OidcUserInfo userInfo) {
         super(userID, password, enabled, accountNonExpired, credentialsNonExpired, accountNonLocked, authorities);
         this.user = user;
@@ -45,7 +45,7 @@ public class LocalUser extends User implements OAuth2User, OidcUser {
         this.userInfo = userInfo;
     }
 
-    public static LocalUser create(com.malibu.app.model.User user,
+    public static LocalUser create(com.malibu.app.entity.User user,
                                    Map<String, Object> attributes,
                                    OidcIdToken idToken,
                                    OidcUserInfo userInfo) {
@@ -85,7 +85,7 @@ public class LocalUser extends User implements OAuth2User, OidcUser {
         return this.idToken;
     }
 
-    public com.malibu.app.model.User getUser() {
+    public com.malibu.app.entity.User getUser() {
         return user;
     }
 }

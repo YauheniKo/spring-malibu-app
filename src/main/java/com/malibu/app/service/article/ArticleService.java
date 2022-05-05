@@ -1,8 +1,9 @@
 package com.malibu.app.service.article;
 
-import com.malibu.app.model.Article;
-import com.malibu.app.model.Tag;
+import com.malibu.app.entity.Article;
+import com.malibu.app.entity.Tag;
 import com.malibu.app.payload.request.ArticleRequest;
+import com.malibu.app.payload.response.ArticleResponse;
 import com.malibu.app.repository.ArticleRepository;
 import com.malibu.app.repository.TagRepository;
 import com.malibu.app.repository.UserRepository;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
@@ -31,8 +33,9 @@ public class ArticleService {
     private final TagRepository tagRepository;
     private final UserRepository userRepository;
 
-    public ResponseEntity<List<Article>> getAllArticle(String title) {
+    public ResponseEntity<List<ArticleResponse>> getAllArticle(String title) {
         try {
+            List<ArticleResponse> articleResponses;
             List<Article> articles;
             if (StringUtils.isEmpty(title)) {
                 articles = articleRepository.findAll();
@@ -44,19 +47,40 @@ public class ArticleService {
                 return new ResponseEntity<>(HttpStatus.NO_CONTENT);
             }
 
-            return new ResponseEntity<>(articles, HttpStatus.OK);
+            articleResponses = articles.stream().map(article -> new ArticleResponse()
+                    .setId(article.getId())
+                    .setUserId(article.getUser().getId())
+                    .setUsername(article.getUser().getUsername())
+                    .setTitle(article.getTitle())
+                    .setDescription(article.getDescription())
+                    .setTitle(article.getText())
+                    .setTag(article.getTag())
+                    .setPublished(article.isPublished())).collect(Collectors.toList());
+            return new ResponseEntity<>(articleResponses, HttpStatus.OK);
         } catch (Exception e) {
             e.printStackTrace();
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    public ResponseEntity<Article> getArticleById(@PathVariable("id") long id) {
+    public ResponseEntity<ArticleResponse> getArticleById(@PathVariable("id") long id) {
         Optional<Article> articleData = articleRepository.findById(id);
+        ArticleResponse articleResponse = new ArticleResponse();
+        return articleData.map(article -> {
+                    articleResponse
+                            .setId(article.getId())
+                            .setUserId(article.getUser().getId())
+                            .setUsername(article.getUser().getUsername())
+                            .setTitle(article.getTitle())
+                            .setDescription(article.getDescription())
+                            .setTitle(article.getText())
+                            .setTag(article.getTag())
+                            .setPublished(article.isPublished());
+                    return new ResponseEntity<>(articleResponse, HttpStatus.OK);
+                })
+                .orElse(
+                        new ResponseEntity<>(HttpStatus.NOT_FOUND));
 
-        return articleData.map(article ->
-                new ResponseEntity<>(article, HttpStatus.OK)).orElseGet(() ->
-                new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     public ResponseEntity<Article> createArticle(@RequestBody ArticleRequest articleRequest) {
@@ -88,6 +112,7 @@ public class ArticleService {
                     .setDescription(article.getDescription())
                     .setText(article.getText())
                     .setTag(article.getTag())
+                    .setPublished(article.isPublished())
                     .setUpdateAt(new Date());
 
             return new ResponseEntity<>(articleRepository.save(newArticle), HttpStatus.OK);

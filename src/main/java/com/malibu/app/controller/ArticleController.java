@@ -1,7 +1,8 @@
 package com.malibu.app.controller;
 
-import com.malibu.app.model.Article;
+import com.malibu.app.entity.Article;
 import com.malibu.app.payload.request.ArticleRequest;
+import com.malibu.app.payload.response.ArticleResponse;
 import com.malibu.app.service.article.ArticleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -27,12 +28,12 @@ public class ArticleController {
     private final ArticleService articleService;
 
     @GetMapping
-    public ResponseEntity<List<Article>> getAllArticle(@RequestParam(required = false) String title) {
+    public ResponseEntity<List<ArticleResponse>> getAllArticle(@RequestParam(required = false) String title) {
         return articleService.getAllArticle(title);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Article> getArticleById(@PathVariable("id") long id) {
+    public ResponseEntity<ArticleResponse> getArticleById(@PathVariable("id") long id) {
         return articleService.getArticleById(id);
     }
 
