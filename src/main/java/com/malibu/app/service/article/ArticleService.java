@@ -1,7 +1,11 @@
 package com.malibu.app.service.article;
 
+import com.malibu.app.dto.LocalUser;
 import com.malibu.app.entity.Article;
+import com.malibu.app.entity.ERole;
+import com.malibu.app.entity.Role;
 import com.malibu.app.entity.Tag;
+import com.malibu.app.entity.User;
 import com.malibu.app.payload.request.ArticleRequest;
 import com.malibu.app.payload.response.ArticleResponse;
 import com.malibu.app.repository.ArticleRepository;
@@ -15,7 +19,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
@@ -33,14 +36,22 @@ public class ArticleService {
     private final TagRepository tagRepository;
     private final UserRepository userRepository;
 
-    public ResponseEntity<List<ArticleResponse>> getAllArticle(String title) {
+    public ResponseEntity<List<ArticleResponse>> getAllArticle(String title, LocalUser userLocal) {
         try {
             List<ArticleResponse> articleResponses;
             List<Article> articles;
             if (StringUtils.isEmpty(title)) {
-                articles = articleRepository.findAll();
+                if (isAdminOrModer(userLocal)) {
+                    articles = articleRepository.findAll();
+                } else {
+                    articles = articleRepository.findAllByPublishedIsTrue();
+                }
             } else {
-                articles = articleRepository.findByTitle(title);
+                if (isAdminOrModer(userLocal)) {
+                    articles = articleRepository.findByTitle(title);
+                } else {
+                    articles = articleRepository.findByTitleAndPublishedIsTrue(title);
+                }
             }
 
             if (articles.isEmpty()) {
@@ -53,7 +64,7 @@ public class ArticleService {
                     .setUsername(article.getUser().getUsername())
                     .setTitle(article.getTitle())
                     .setDescription(article.getDescription())
-                    .setTitle(article.getText())
+                    .setText(article.getText())
                     .setTag(article.getTag())
                     .setPublished(article.isPublished())).collect(Collectors.toList());
             return new ResponseEntity<>(articleResponses, HttpStatus.OK);
@@ -73,7 +84,7 @@ public class ArticleService {
                             .setUsername(article.getUser().getUsername())
                             .setTitle(article.getTitle())
                             .setDescription(article.getDescription())
-                            .setTitle(article.getText())
+                            .setText(article.getText())
                             .setTag(article.getTag())
                             .setPublished(article.isPublished());
                     return new ResponseEntity<>(articleResponse, HttpStatus.OK);
@@ -160,6 +171,19 @@ public class ArticleService {
         newSetTag.addAll(currentTag);
         return newSetTag;
 
+    }
+
+    private boolean isAdminOrModer(LocalUser localUser) {
+        Set<String> roleSet = localUser
+                .getUser()
+                .getRoles()
+                .stream().map(Role::getName).collect(Collectors.toSet());
+        if (roleSet.contains(ERole.ROLE_ADMIN.name()) || roleSet.contains(ERole.ROLE_MODERATOR)) {
+
+            return true;
+        } else {
+            return false;
+        }
 
     }
 }

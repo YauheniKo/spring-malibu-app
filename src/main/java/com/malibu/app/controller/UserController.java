@@ -36,6 +36,7 @@ public class UserController {
     @GetMapping("/user")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<?> getUserContent() {
+
         return ResponseEntity.ok("User content goes here");
     }
 
