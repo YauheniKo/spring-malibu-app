@@ -1,4 +1,4 @@
-package com.malibu.app.payload.response;
+package com.malibu.app.dto;
 
 import lombok.Getter;
 import lombok.Setter;

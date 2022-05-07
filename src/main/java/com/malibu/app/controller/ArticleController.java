@@ -3,8 +3,8 @@ package com.malibu.app.controller;
 import com.malibu.app.config.CurrentUser;
 import com.malibu.app.dto.LocalUser;
 import com.malibu.app.entity.Article;
-import com.malibu.app.payload.request.ArticleRequest;
-import com.malibu.app.payload.response.ArticleResponse;
+import com.malibu.app.dto.ArticleRequest;
+import com.malibu.app.dto.ArticleResponse;
 import com.malibu.app.service.article.ArticleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -30,7 +30,8 @@ public class ArticleController {
     private final ArticleService articleService;
 
     @GetMapping
-    public ResponseEntity<List<ArticleResponse>> getAllArticle(@CurrentUser LocalUser user, @RequestParam(required = false) String title) {
+    public ResponseEntity<List<ArticleResponse>> getAllArticle(@CurrentUser LocalUser user,
+                                                               @RequestParam(required = false) String title) {
         return articleService.getAllArticle(title,user);
     }
 
@@ -52,6 +53,11 @@ public class ArticleController {
     @DeleteMapping("/{id}")
     public ResponseEntity<HttpStatus> deleteArticle(@PathVariable("id") long id) {
         return articleService.deleteArticle(id);
+    }
+    @GetMapping ("/like/{id}")
+    public ResponseEntity<Long> gradeLike(@PathVariable("id") long articleId,
+                                             @CurrentUser LocalUser user) {
+        return articleService.gradeLike(articleId, user);
     }
 
 }

@@ -3,9 +3,9 @@ package com.malibu.app.entity;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.format.annotation.DateTimeFormat;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -33,9 +33,10 @@ public class Article {
 
     private String description;
 
+    @Column(columnDefinition = "text")
     private String text;
 
-    private boolean published=false;
+    private boolean published = false;
 
     @DateTimeFormat(pattern = "dd.MM.yyyy")
     private Date createAt;
@@ -51,10 +52,5 @@ public class Article {
             joinColumns = @JoinColumn(name = "article_id"),
             inverseJoinColumns = @JoinColumn(name = "tag_id"))
     private Set<Tag> tag;
-
-    @OneToMany(fetch = FetchType.LAZY)
-    @JoinColumn(name = "article_id")
-    private Set<Like> likes;
-
 
 }

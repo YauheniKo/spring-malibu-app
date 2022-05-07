@@ -1,4 +1,4 @@
-package com.malibu.app.payload.response;
+package com.malibu.app.dto;
 
 import com.malibu.app.entity.Tag;
 import lombok.Getter;
@@ -18,6 +18,8 @@ public class ArticleResponse {
     private String description;
     private String text;
     private Set<Tag> tag;
+    private Long likes;
+    private Boolean meLiked;
     private boolean published;
 
 }
