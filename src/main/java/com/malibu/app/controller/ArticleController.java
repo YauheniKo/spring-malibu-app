@@ -5,8 +5,11 @@ import com.malibu.app.dto.LocalUser;
 import com.malibu.app.entity.Article;
 import com.malibu.app.dto.ArticleRequest;
 import com.malibu.app.dto.ArticleResponse;
+import com.malibu.app.service.FileFirebaseService;
 import com.malibu.app.service.article.ArticleService;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -19,7 +22,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @CrossOrigin(origins = "*")
@@ -27,6 +32,9 @@ import java.util.List;
 @RequestMapping("/api/articles")
 @RequiredArgsConstructor
 public class ArticleController {
+    private static final Logger logger = LoggerFactory.getLogger(ArticleController.class);
+
+    private final FileFirebaseService fileService;
     private final ArticleService articleService;
 
     @GetMapping
@@ -41,7 +49,7 @@ public class ArticleController {
     }
 
     @PostMapping
-    public ResponseEntity<Article> createArticle( @RequestBody ArticleRequest articleRequest) {
+    public ResponseEntity<Long> createArticle(@RequestBody ArticleRequest articleRequest) {
         return articleService.createArticle(articleRequest);
     }
 
@@ -58,6 +66,19 @@ public class ArticleController {
     public ResponseEntity<Long> gradeLike(@PathVariable("id") long articleId,
                                              @CurrentUser LocalUser user) {
         return articleService.gradeLike(articleId, user);
+    }
+
+    @PostMapping("/image/upload")
+    public Object upload(@RequestParam("file") MultipartFile multipartFile) {
+//        logger.info("HIT -/upload | File Name : {}", multipartFile.getOriginalFilename());
+        return fileService.upload(multipartFile);
+
+    }
+
+    @PostMapping("/image/{fileName}")
+    public Object download(@PathVariable String fileName) throws IOException {
+        logger.info("HIT -/download | File Name : {}", fileName);
+        return fileService.download(fileName);
     }
 
 }

@@ -104,7 +104,7 @@ public class ArticleService {
     }
 
     @Transactional
-    public ResponseEntity<Article> createArticle(ArticleRequest articleRequest) {
+    public ResponseEntity<Long> createArticle(ArticleRequest articleRequest) {
         try {
 
             Article newArticle = articleRepository
@@ -116,7 +116,7 @@ public class ArticleService {
                             .setCreateAt(new Date())
                             .setUser(userRepository.findById(articleRequest.getUserId()).get()));
 
-            return new ResponseEntity<>(newArticle, HttpStatus.CREATED);
+            return new ResponseEntity<>(newArticle.getId(), HttpStatus.CREATED);
         } catch (Exception e) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
