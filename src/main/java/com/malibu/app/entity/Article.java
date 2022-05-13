@@ -55,7 +55,7 @@ public class Article {
     private Set<Tag> tag;
 
     @OneToMany(fetch = FetchType.LAZY)
-    @JoinColumn(name = "articleFile_id")
+    @JoinColumn(name = "article_id")
     private List<ArticleFile> articleFile;
 
 

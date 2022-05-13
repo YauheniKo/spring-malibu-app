@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
+import java.util.List;
 import java.util.Set;
 
 @Getter
@@ -21,5 +22,6 @@ public class ArticleResponse {
     private Long likes;
     private Boolean meLiked;
     private boolean published;
+    private List<String> filesUrl;
 
 }

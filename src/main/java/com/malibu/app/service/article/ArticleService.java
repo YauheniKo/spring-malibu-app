@@ -21,6 +21,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.persistence.EntityNotFoundException;
@@ -72,7 +73,7 @@ public class ArticleService {
                 long userId = userLocal.getUser().getId();
                 long articleId = article.getId();
 
-                return new ArticleResponse()
+                ArticleResponse newResponse = new ArticleResponse()
                         .setId(articleId)
                         .setUserId(userId)
                         .setUsername(article.getUser().getUsername())
@@ -83,6 +84,13 @@ public class ArticleService {
                         .setLikes(likeRepository.countByArticle(article.getId()))
                         .setMeLiked(likeRepository.existsByArticleAndUsr(articleId, userId))
                         .setPublished(article.isPublished());
+                List<ArticleFile> articleFiles = article.getArticleFile();
+                if (articleFiles != null && !articleFiles.isEmpty()) {
+                    newResponse
+                            .setFilesUrl(articleFiles.stream()
+                                    .map(ArticleFile::getUrl).collect(Collectors.toList()));
+                }
+                return newResponse;
             }).collect(Collectors.toList());
             return new ResponseEntity<>(articleResponses, HttpStatus.OK);
         } catch (Exception e) {
@@ -95,6 +103,13 @@ public class ArticleService {
         Optional<Article> articleData = articleRepository.findById(id);
         ArticleResponse articleResponse = new ArticleResponse();
         return articleData.map(article -> {
+
+                    List<ArticleFile> articleFiles = article.getArticleFile();
+                    if (articleFiles != null && !articleFiles.isEmpty()) {
+                        articleResponse
+                                .setFilesUrl(articleFiles.stream()
+                                        .map(ArticleFile::getUrl).collect(Collectors.toList()));
+                    }
                     articleResponse
                             .setId(article.getId())
                             .setUserId(article.getUser().getId())
@@ -114,13 +129,6 @@ public class ArticleService {
     @Transactional
     public ResponseEntity<Long> createArticle(ArticleRequest articleRequest, List<MultipartFile> files) {
         try {
-            List<ArticleFile> articleFileList = new ArrayList<>();
-            if (!files.isEmpty()) {
-                articleFileList = files.stream()
-                        .map(fileService::upload)
-                        .map(tempUrl -> articleFileRepository.save(new ArticleFile().setUrl(tempUrl)))
-                        .collect(Collectors.toList());
-            }
 
             Article article = new Article();
             article
@@ -129,12 +137,18 @@ public class ArticleService {
                     .setText(articleRequest.getText())
                     .setTag(getTags(articleRequest.getTagName()))
                     .setCreateAt(new Date())
-                    .setUser(userRepository.findById(articleRequest.getUserId()).get())
-                    .setArticleFile(articleFileList);
-            if (!articleFileList.isEmpty()) {
-                article.setArticleFile(articleFileList);
-            }
+                    .setUser(userRepository.findById(articleRequest.getUserId()).get());
+
             Article newArticle = articleRepository.save(article);
+            List<ArticleFile> articleFileList = new ArrayList<>();
+            if (!files.isEmpty()) {
+                articleFileList = files.stream()
+                        .map(fileService::upload)
+                        .map(tempUrl -> articleFileRepository.save(new ArticleFile()
+                                .setUrl(tempUrl)
+                                .setArticleId(article)))
+                        .collect(Collectors.toList());
+            }
 
             return new ResponseEntity<>(newArticle.getId(), HttpStatus.CREATED);
         } catch (Exception e) {
