@@ -7,7 +7,6 @@ import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
-import com.malibu.app.entity.Article;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
@@ -17,15 +16,12 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -33,25 +29,20 @@ public class FileFirebaseService {
     String bucketName = "springfirebase-3b777.appspot.com";
     String DOWNLOAD_URL = "https://firebasestorage.googleapis.com/v0/b/" + bucketName + "/o/%s?alt=media";
 
-    @Value("${file.storage}")
-    private Resource localFile;
-
-
-    public ResponseEntity<String> upload(MultipartFile multipartFile) {
+    public String upload(MultipartFile multipartFile) {
 
         try {
-            List<String> fileNames =new ArrayList<>();
-                    String fileName = multipartFile.getOriginalFilename();
-                    fileNames.add(fileName);
-            fileName = UUID.randomUUID().toString().concat(getExtension(fileName));
 
+            String fileName = multipartFile.getOriginalFilename();
+            fileName = UUID.randomUUID().toString().concat(getExtension(fileName));
             File file = convertToFile(multipartFile, fileName);
             String TEMP_URL = uploadFile(file, fileName);
             file.delete();
-            return new ResponseEntity<>(TEMP_URL, HttpStatus.OK);
+
+            return TEMP_URL;
         } catch (Exception e) {
-            e.printStackTrace();
-            return new ResponseEntity<>("Some Error", HttpStatus.BAD_REQUEST);
+            //TODO handle Exception
+            return null;
         }
 
     }

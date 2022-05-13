@@ -2,25 +2,31 @@ package com.malibu.app.service.article;
 
 import com.malibu.app.dto.LocalUser;
 import com.malibu.app.entity.Article;
+import com.malibu.app.entity.ArticleFile;
 import com.malibu.app.entity.ERole;
 import com.malibu.app.entity.Like;
 import com.malibu.app.entity.Role;
 import com.malibu.app.entity.Tag;
 import com.malibu.app.dto.ArticleRequest;
 import com.malibu.app.dto.ArticleResponse;
+import com.malibu.app.repository.ArticleFileRepository;
 import com.malibu.app.repository.ArticleRepository;
 import com.malibu.app.repository.LikeRepository;
 import com.malibu.app.repository.TagRepository;
 import com.malibu.app.repository.UserRepository;
+import com.malibu.app.service.FileFirebaseService;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.persistence.EntityNotFoundException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -37,6 +43,8 @@ public class ArticleService {
     private final TagRepository tagRepository;
     private final UserRepository userRepository;
     private final LikeRepository likeRepository;
+    private final FileFirebaseService fileService;
+    private final ArticleFileRepository articleFileRepository;
 
     public ResponseEntity<List<ArticleResponse>> getAllArticle(String title, LocalUser userLocal) {
         try {
@@ -104,17 +112,29 @@ public class ArticleService {
     }
 
     @Transactional
-    public ResponseEntity<Long> createArticle(ArticleRequest articleRequest) {
+    public ResponseEntity<Long> createArticle(ArticleRequest articleRequest, List<MultipartFile> files) {
         try {
+            List<ArticleFile> articleFileList = new ArrayList<>();
+            if (!files.isEmpty()) {
+                articleFileList = files.stream()
+                        .map(fileService::upload)
+                        .map(tempUrl -> articleFileRepository.save(new ArticleFile().setUrl(tempUrl)))
+                        .collect(Collectors.toList());
+            }
 
-            Article newArticle = articleRepository
-                    .save(new Article()
-                            .setTitle(articleRequest.getTitle())
-                            .setDescription(articleRequest.getDescription())
-                            .setText(articleRequest.getText())
-                            .setTag(getTags(articleRequest.getTagName()))
-                            .setCreateAt(new Date())
-                            .setUser(userRepository.findById(articleRequest.getUserId()).get()));
+            Article article = new Article();
+            article
+                    .setTitle(articleRequest.getTitle())
+                    .setDescription(articleRequest.getDescription())
+                    .setText(articleRequest.getText())
+                    .setTag(getTags(articleRequest.getTagName()))
+                    .setCreateAt(new Date())
+                    .setUser(userRepository.findById(articleRequest.getUserId()).get())
+                    .setArticleFile(articleFileList);
+            if (!articleFileList.isEmpty()) {
+                article.setArticleFile(articleFileList);
+            }
+            Article newArticle = articleRepository.save(article);
 
             return new ResponseEntity<>(newArticle.getId(), HttpStatus.CREATED);
         } catch (Exception e) {

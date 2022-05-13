@@ -18,5 +18,4 @@ public class ArticleRequest {
     private String text;
     private String tagName;
     private boolean published;
-    private List<MultipartFile> images;
 }

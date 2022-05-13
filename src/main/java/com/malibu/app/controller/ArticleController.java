@@ -1,10 +1,10 @@
 package com.malibu.app.controller;
 
 import com.malibu.app.config.CurrentUser;
-import com.malibu.app.dto.LocalUser;
-import com.malibu.app.entity.Article;
 import com.malibu.app.dto.ArticleRequest;
 import com.malibu.app.dto.ArticleResponse;
+import com.malibu.app.dto.LocalUser;
+import com.malibu.app.entity.Article;
 import com.malibu.app.service.FileFirebaseService;
 import com.malibu.app.service.article.ArticleService;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -40,7 +41,7 @@ public class ArticleController {
     @GetMapping
     public ResponseEntity<List<ArticleResponse>> getAllArticle(@CurrentUser LocalUser user,
                                                                @RequestParam(required = false) String title) {
-        return articleService.getAllArticle(title,user);
+        return articleService.getAllArticle(title, user);
     }
 
     @GetMapping("/{id}")
@@ -48,9 +49,15 @@ public class ArticleController {
         return articleService.getArticleById(id);
     }
 
-    @PostMapping
-    public ResponseEntity<Long> createArticle(@RequestBody ArticleRequest articleRequest) {
-        return articleService.createArticle(articleRequest);
+//    @PostMapping
+//    public ResponseEntity<Long> createArticle(@RequestBody ArticleRequest articleRequest) {
+//        return articleService.createArticle(articleRequest);
+//    }
+    @PostMapping(consumes = {"multipart/form-data"})
+    public Object createArticle(@RequestPart("article") ArticleRequest articleRequest,
+                                    @RequestPart("file") List<MultipartFile> files) {
+        return articleService.createArticle(articleRequest, files);
+
     }
 
     @PutMapping("/{id}")
@@ -62,23 +69,32 @@ public class ArticleController {
     public ResponseEntity<HttpStatus> deleteArticle(@PathVariable("id") long id) {
         return articleService.deleteArticle(id);
     }
-    @GetMapping ("/like/{id}")
+
+    @GetMapping("/like/{id}")
     public ResponseEntity<Long> gradeLike(@PathVariable("id") long articleId,
-                                             @CurrentUser LocalUser user) {
+                                          @CurrentUser LocalUser user) {
         return articleService.gradeLike(articleId, user);
     }
 
-    @PostMapping("/image/upload")
-    public Object upload(@RequestParam("file") MultipartFile multipartFile) {
-//        logger.info("HIT -/upload | File Name : {}", multipartFile.getOriginalFilename());
-        return fileService.upload(multipartFile);
-
-    }
+//    @PostMapping("/image/upload")
+//    public Object upload(@RequestParam("file") MultipartFile multipartFile) {
+////        logger.info("HIT -/upload | File Name : {}", multipartFile.getOriginalFilename());
+//        return fileService.upload(multipartFile);
+//
+//    }
 
     @PostMapping("/image/{fileName}")
     public Object download(@PathVariable String fileName) throws IOException {
         logger.info("HIT -/download | File Name : {}", fileName);
         return fileService.download(fileName);
+    }
+
+    @PostMapping(path = "/image/angular/upload", consumes = {"multipart/form-data"})
+    public Object uploadFromAngular(@RequestPart("article") ArticleRequest articleRequest,
+                                    @RequestPart("file") List<MultipartFile> file) {
+//        logger.info("HIT -/upload | File Name : {}", multipartFile.getOriginalFilename());
+        return null;
+
     }
 
 }

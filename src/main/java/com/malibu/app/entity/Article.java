@@ -15,7 +15,9 @@ import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -51,5 +53,10 @@ public class Article {
             joinColumns = @JoinColumn(name = "article_id"),
             inverseJoinColumns = @JoinColumn(name = "tag_id"))
     private Set<Tag> tag;
+
+    @OneToMany(fetch = FetchType.LAZY)
+    @JoinColumn(name = "articleFile_id")
+    private List<ArticleFile> articleFile;
+
 
 }
