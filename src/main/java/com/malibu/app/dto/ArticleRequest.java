@@ -1,5 +1,6 @@
 package com.malibu.app.dto;
 
+import com.malibu.app.entity.Tag;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
@@ -16,6 +17,6 @@ public class ArticleRequest {
     private String title;
     private String description;
     private String text;
-    private String tagName;
+    private List<Tag> tags;
     private boolean published;
 }

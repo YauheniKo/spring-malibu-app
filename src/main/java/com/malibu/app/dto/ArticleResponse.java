@@ -18,7 +18,7 @@ public class ArticleResponse {
     private String title;
     private String description;
     private String text;
-    private Set<Tag> tag;
+    private Set<Tag> tags;
     private Long likes;
     private Boolean meLiked;
     private boolean published;

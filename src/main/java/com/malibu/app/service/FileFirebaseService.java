@@ -7,6 +7,8 @@ import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
+import com.malibu.app.dto.FireBaseResponseDto;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
@@ -29,17 +31,17 @@ public class FileFirebaseService {
     String bucketName = "springfirebase-3b777.appspot.com";
     String DOWNLOAD_URL = "https://firebasestorage.googleapis.com/v0/b/" + bucketName + "/o/%s?alt=media";
 
-    public String upload(MultipartFile multipartFile) {
+    public FireBaseResponseDto upload(MultipartFile multipartFile) {
 
         try {
 
             String fileName = multipartFile.getOriginalFilename();
             fileName = UUID.randomUUID().toString().concat(getExtension(fileName));
             File file = convertToFile(multipartFile, fileName);
-            String TEMP_URL = uploadFile(file, fileName);
+            String urlTemplate = uploadFile(file, fileName);
             file.delete();
 
-            return TEMP_URL;
+            return new FireBaseResponseDto().setFileName(fileName).setUrlTemplate(urlTemplate);
         } catch (Exception e) {
             //TODO handle Exception
             return null;
@@ -47,16 +49,13 @@ public class FileFirebaseService {
 
     }
 
-    public ResponseEntity<String> download(String fileName) throws IOException {
-        String destFileName = UUID.randomUUID().toString().concat(getExtension(fileName));
-        String destFilePath = "C:\\Users\\User\\Desktop\\MALIBU\\Firebase_" + destFileName;
-
-
+    public void deleteFile(String fileName) throws IOException {
         Storage storage = StorageOptions.newBuilder().setCredentials(getCredentials()).build().getService();
-        Blob blob = storage.get(BlobId.of(bucketName, fileName));
+        storage.delete(BlobId.of(bucketName, fileName));
+    }
 
-        blob.downloadTo(Paths.get(destFilePath));
-        return new ResponseEntity<>("Successfully Downloaded!", HttpStatus.OK);
+    public static void main(String[] args) {
+        System.out.println(org.hibernate.Version.getVersionString());
     }
 
     private String uploadFile(File file, String fileName) throws IOException {

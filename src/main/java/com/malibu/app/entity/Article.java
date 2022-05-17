@@ -54,9 +54,4 @@ public class Article {
             inverseJoinColumns = @JoinColumn(name = "tag_id"))
     private Set<Tag> tag;
 
-    @OneToMany(fetch = FetchType.LAZY)
-    @JoinColumn(name = "article_id")
-    private List<ArticleFile> articleFile;
-
-
 }

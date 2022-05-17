@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -33,9 +34,6 @@ import java.util.List;
 @RequestMapping("/api/articles")
 @RequiredArgsConstructor
 public class ArticleController {
-    private static final Logger logger = LoggerFactory.getLogger(ArticleController.class);
-
-    private final FileFirebaseService fileService;
     private final ArticleService articleService;
 
     @GetMapping
@@ -49,13 +47,10 @@ public class ArticleController {
         return articleService.getArticleById(id);
     }
 
-//    @PostMapping
-//    public ResponseEntity<Long> createArticle(@RequestBody ArticleRequest articleRequest) {
-//        return articleService.createArticle(articleRequest);
-//    }
-    @PostMapping(consumes = {"multipart/form-data"})
+    @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE,
+            consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
     public Object createArticle(@RequestPart("article") ArticleRequest articleRequest,
-                                    @RequestPart("file") List<MultipartFile> files) {
+                                @RequestPart(value = "file", required = false) List<MultipartFile> files) {
         return articleService.createArticle(articleRequest, files);
 
     }
@@ -76,25 +71,5 @@ public class ArticleController {
         return articleService.gradeLike(articleId, user);
     }
 
-//    @PostMapping("/image/upload")
-//    public Object upload(@RequestParam("file") MultipartFile multipartFile) {
-////        logger.info("HIT -/upload | File Name : {}", multipartFile.getOriginalFilename());
-//        return fileService.upload(multipartFile);
-//
-//    }
-
-    @PostMapping("/image/{fileName}")
-    public Object download(@PathVariable String fileName) throws IOException {
-        logger.info("HIT -/download | File Name : {}", fileName);
-        return fileService.download(fileName);
-    }
-
-    @PostMapping(path = "/image/angular/upload", consumes = {"multipart/form-data"})
-    public Object uploadFromAngular(@RequestPart("article") ArticleRequest articleRequest,
-                                    @RequestPart("file") List<MultipartFile> file) {
-//        logger.info("HIT -/upload | File Name : {}", multipartFile.getOriginalFilename());
-        return null;
-
-    }
 
 }

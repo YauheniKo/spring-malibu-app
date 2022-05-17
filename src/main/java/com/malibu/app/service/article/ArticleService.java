@@ -1,5 +1,8 @@
 package com.malibu.app.service.article;
 
+import com.malibu.app.dto.ArticleRequest;
+import com.malibu.app.dto.ArticleResponse;
+import com.malibu.app.dto.FireBaseResponseDto;
 import com.malibu.app.dto.LocalUser;
 import com.malibu.app.entity.Article;
 import com.malibu.app.entity.ArticleFile;
@@ -7,8 +10,6 @@ import com.malibu.app.entity.ERole;
 import com.malibu.app.entity.Like;
 import com.malibu.app.entity.Role;
 import com.malibu.app.entity.Tag;
-import com.malibu.app.dto.ArticleRequest;
-import com.malibu.app.dto.ArticleResponse;
 import com.malibu.app.repository.ArticleFileRepository;
 import com.malibu.app.repository.ArticleRepository;
 import com.malibu.app.repository.LikeRepository;
@@ -17,17 +18,15 @@ import com.malibu.app.repository.UserRepository;
 import com.malibu.app.service.FileFirebaseService;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.CollectionUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.persistence.EntityNotFoundException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
+import java.io.IOException;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -80,15 +79,15 @@ public class ArticleService {
                         .setTitle(article.getTitle())
                         .setDescription(article.getDescription())
                         .setText(article.getText())
-                        .setTag(article.getTag())
+                        .setTags(article.getTag())
                         .setLikes(likeRepository.countByArticle(article.getId()))
                         .setMeLiked(likeRepository.existsByArticleAndUsr(articleId, userId))
                         .setPublished(article.isPublished());
-                List<ArticleFile> articleFiles = article.getArticleFile();
+                List<ArticleFile> articleFiles = articleFileRepository.findAllByArticleId(articleId);
                 if (articleFiles != null && !articleFiles.isEmpty()) {
                     newResponse
                             .setFilesUrl(articleFiles.stream()
-                                    .map(ArticleFile::getUrl).collect(Collectors.toList()));
+                                    .map(ArticleFile::getUrlTemplate).collect(Collectors.toList()));
                 }
                 return newResponse;
             }).collect(Collectors.toList());
@@ -104,11 +103,11 @@ public class ArticleService {
         ArticleResponse articleResponse = new ArticleResponse();
         return articleData.map(article -> {
 
-                    List<ArticleFile> articleFiles = article.getArticleFile();
+                    List<ArticleFile> articleFiles = articleFileRepository.findAllByArticleId(article.getId());
                     if (articleFiles != null && !articleFiles.isEmpty()) {
                         articleResponse
                                 .setFilesUrl(articleFiles.stream()
-                                        .map(ArticleFile::getUrl).collect(Collectors.toList()));
+                                        .map(ArticleFile::getUrlTemplate).collect(Collectors.toList()));
                     }
                     articleResponse
                             .setId(article.getId())
@@ -117,7 +116,7 @@ public class ArticleService {
                             .setTitle(article.getTitle())
                             .setDescription(article.getDescription())
                             .setText(article.getText())
-                            .setTag(article.getTag())
+                            .setTags(article.getTag())
                             .setPublished(article.isPublished());
                     return new ResponseEntity<>(articleResponse, HttpStatus.OK);
                 })
@@ -135,19 +134,20 @@ public class ArticleService {
                     .setTitle(articleRequest.getTitle())
                     .setDescription(articleRequest.getDescription())
                     .setText(articleRequest.getText())
-                    .setTag(getTags(articleRequest.getTagName()))
+                    .setTag(getTags(articleRequest.getTags()))
                     .setCreateAt(new Date())
-                    .setUser(userRepository.findById(articleRequest.getUserId()).get());
+                    .setUser(userRepository.findById(articleRequest.getUserId()).orElseThrow());
 
             Article newArticle = articleRepository.save(article);
-            List<ArticleFile> articleFileList = new ArrayList<>();
+
             if (!files.isEmpty()) {
-                articleFileList = files.stream()
-                        .map(fileService::upload)
-                        .map(tempUrl -> articleFileRepository.save(new ArticleFile()
-                                .setUrl(tempUrl)
-                                .setArticleId(article)))
-                        .collect(Collectors.toList());
+                files.forEach(file -> {
+                    FireBaseResponseDto fireBaseResponseDto = fileService.upload(file);
+                    articleFileRepository.save(new ArticleFile()
+                            .setUrlTemplate(fireBaseResponseDto.getUrlTemplate())
+                            .setFileName(fireBaseResponseDto.getFileName())
+                            .setArticle(article));
+                });
             }
 
             return new ResponseEntity<>(newArticle.getId(), HttpStatus.CREATED);
@@ -174,11 +174,25 @@ public class ArticleService {
     }
 
 
-    public ResponseEntity<HttpStatus> deleteArticle(long id) {
+    public ResponseEntity<HttpStatus> deleteArticle(Long id) {
         try {
+            List<ArticleFile> articleFileList = articleFileRepository.findAllByArticleId(id);
+
+            if (!articleFileList.isEmpty()) {
+                articleFileList
+                        .forEach(articleFile -> {
+                            try {
+                                fileService.deleteFile(articleFile.getFileName());
+                                articleFileRepository.delete(articleFile);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        });
+            }
             articleRepository.deleteById(id);
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } catch (Exception e) {
+            e.printStackTrace();
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -196,33 +210,24 @@ public class ArticleService {
         return new ResponseEntity<>(likeRepository.countByArticle(articleId), HttpStatus.OK);
     }
 
-    private Set<Tag> getTags(String tagNamesStr) {
-
-        Set<String> tagNames = Arrays.stream(tagNamesStr.split(",")).collect(Collectors.toSet());
-
-        List<Tag> currentTag =
-                tagNames
-                        .stream()
-                        .map(tagRepository::findTagByName)
-                        .filter(Objects::nonNull)
-                        .collect(Collectors.toList());
-
-        List<String> newTagName =
-                tagNames
-                        .stream()
-                        .filter(newName -> currentTag
-                                .stream()
-                                .noneMatch(currTg -> Objects.equals(currTg.getName(), newName)))
-                        .collect(Collectors.toList());
+    private Set<Tag> getTags(List<Tag> tagList) {
 
 
-        List<Tag> newTags = tagRepository.saveAll(newTagName
+        Set<Tag> currentTag = tagList
                 .stream()
-                .map(res -> new Tag().setName(res))
-                .collect(Collectors.toList()));
+                .map(res -> tagRepository.findTagByName(res.getName()))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
 
-        Set<Tag> newSetTag = new HashSet<>(newTags);
-        newSetTag.addAll(currentTag);
+        Set<Tag> newSetTag = tagList
+                .stream()
+                .filter(newTag -> currentTag
+                        .stream()
+                        .noneMatch(currTg -> Objects.equals(currTg.getName(), newTag.getName().toLowerCase())))
+                .collect(Collectors.toSet());
+        List<Tag> res = tagRepository.saveAll(newSetTag);
+
+        res.addAll(currentTag);
         return newSetTag;
 
     }

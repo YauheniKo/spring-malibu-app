@@ -9,6 +9,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
 
 @Entity
@@ -21,10 +22,11 @@ public class ArticleFile {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name="article_id", nullable=false)
-    private Article articleId;
+    private Article article;
 
-    private String url;
+    private String fileName;
+
+    private String urlTemplate;
 
 
 }
