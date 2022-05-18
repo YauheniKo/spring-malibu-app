@@ -1,10 +1,14 @@
 package com.malibu.app.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.springframework.format.annotation.DateTimeFormat;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -52,6 +56,11 @@ public class Article {
     @JoinTable(name = "article_tag",
             joinColumns = @JoinColumn(name = "article_id"),
             inverseJoinColumns = @JoinColumn(name = "tag_id"))
-    private Set<Tag> tag;
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    private Set<Tag> tags;
+
+
+    @OneToMany(orphanRemoval = true, cascade = CascadeType.PERSIST, mappedBy = "article")
+    private List<ArticleFile> articleFiles;;
 
 }

@@ -10,6 +10,7 @@ import com.malibu.app.entity.ERole;
 import com.malibu.app.entity.Like;
 import com.malibu.app.entity.Role;
 import com.malibu.app.entity.Tag;
+import com.malibu.app.mappers.ArticleMapper;
 import com.malibu.app.repository.ArticleFileRepository;
 import com.malibu.app.repository.ArticleRepository;
 import com.malibu.app.repository.LikeRepository;
@@ -18,7 +19,6 @@ import com.malibu.app.repository.UserRepository;
 import com.malibu.app.service.FileFirebaseService;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -27,6 +27,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.persistence.EntityNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -45,6 +47,7 @@ public class ArticleService {
     private final LikeRepository likeRepository;
     private final FileFirebaseService fileService;
     private final ArticleFileRepository articleFileRepository;
+    private final ArticleMapper articleMapper;
 
     public ResponseEntity<List<ArticleResponse>> getAllArticle(String title, LocalUser userLocal) {
         try {
@@ -58,7 +61,7 @@ public class ArticleService {
                 }
             } else {
                 if (isAdminOrModer(userLocal)) {
-                    articles = articleRepository.findByTitle(title);
+                    articles = articleRepository.findByTitleContains(title);
                 } else {
                     articles = articleRepository.findByTitleAndPublishedIsTrue(title);
                 }
@@ -79,7 +82,7 @@ public class ArticleService {
                         .setTitle(article.getTitle())
                         .setDescription(article.getDescription())
                         .setText(article.getText())
-                        .setTags(article.getTag())
+                        .setTags(article.getTags())
                         .setLikes(likeRepository.countByArticle(article.getId()))
                         .setMeLiked(likeRepository.existsByArticleAndUsr(articleId, userId))
                         .setPublished(article.isPublished());
@@ -116,7 +119,7 @@ public class ArticleService {
                             .setTitle(article.getTitle())
                             .setDescription(article.getDescription())
                             .setText(article.getText())
-                            .setTags(article.getTag())
+                            .setTags(article.getTags())
                             .setPublished(article.isPublished());
                     return new ResponseEntity<>(articleResponse, HttpStatus.OK);
                 })
@@ -129,16 +132,12 @@ public class ArticleService {
     public ResponseEntity<Long> createArticle(ArticleRequest articleRequest, List<MultipartFile> files) {
         try {
 
-            Article article = new Article();
-            article
-                    .setTitle(articleRequest.getTitle())
-                    .setDescription(articleRequest.getDescription())
-                    .setText(articleRequest.getText())
-                    .setTag(getTags(articleRequest.getTags()))
+            Article article = articleMapper
+                    .fillCreateArticle(articleRequest)
                     .setCreateAt(new Date())
                     .setUser(userRepository.findById(articleRequest.getUserId()).orElseThrow());
 
-            Article newArticle = articleRepository.save(article);
+            articleRepository.save(article);
 
             if (!files.isEmpty()) {
                 files.forEach(file -> {
@@ -150,26 +149,22 @@ public class ArticleService {
                 });
             }
 
-            return new ResponseEntity<>(newArticle.getId(), HttpStatus.CREATED);
+            return new ResponseEntity<>(article.getId(), HttpStatus.CREATED);
         } catch (Exception e) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @Transactional
-    public ResponseEntity<Article> updateArticle(long id, Article article) {
+    public ResponseEntity<HttpStatus> updateArticle(long id, ArticleRequest articleRequest) {
 
         Article updateArticle = articleRepository
                 .findById(id)
-                .map(a -> a.setTitle(article.getTitle())
-                        .setDescription(article.getDescription())
-                        .setText(article.getText())
-                        .setTag(article.getTag())
-                        .setPublished(article.isPublished())
+                .map(a -> articleMapper.fillUpdateArticle(articleRequest, a)
                         .setUpdateAt(new Date()))
                 .orElseThrow(() -> new EntityNotFoundException("Can't find Article with id: " + id));
-
-        return new ResponseEntity<>(articleRepository.save(updateArticle), HttpStatus.OK);
+        articleRepository.save(updateArticle);
+        return new ResponseEntity<>(HttpStatus.OK);
 
     }
 
@@ -209,29 +204,6 @@ public class ArticleService {
         }
         return new ResponseEntity<>(likeRepository.countByArticle(articleId), HttpStatus.OK);
     }
-
-    private Set<Tag> getTags(List<Tag> tagList) {
-
-
-        Set<Tag> currentTag = tagList
-                .stream()
-                .map(res -> tagRepository.findTagByName(res.getName()))
-                .filter(Objects::nonNull)
-                .collect(Collectors.toSet());
-
-        Set<Tag> newSetTag = tagList
-                .stream()
-                .filter(newTag -> currentTag
-                        .stream()
-                        .noneMatch(currTg -> Objects.equals(currTg.getName(), newTag.getName().toLowerCase())))
-                .collect(Collectors.toSet());
-        List<Tag> res = tagRepository.saveAll(newSetTag);
-
-        res.addAll(currentTag);
-        return newSetTag;
-
-    }
-
 
     private boolean isAdminOrModer(LocalUser localUser) {
         Set<String> roleSet = localUser

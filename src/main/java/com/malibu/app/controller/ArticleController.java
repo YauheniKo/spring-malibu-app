@@ -56,8 +56,8 @@ public class ArticleController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Article> updateArticle(@PathVariable("id") long id, @RequestBody Article article) {
-        return articleService.updateArticle(id, article);//TODO change RequestBody on DTO
+    public ResponseEntity<HttpStatus> updateArticle(@PathVariable("id") long id, @RequestBody ArticleRequest articleRequest) {
+        return articleService.updateArticle(id, articleRequest);
     }
 
     @DeleteMapping("/{id}")
